@@ -1,0 +1,28 @@
+
+{
+  "manifest_version": 3,
+  "name": "ZenFlow: AI Social Media Blocker",
+  "version": "1.0.0",
+  "description": "Reclaim your focus with AI coaching and intelligent site blocking.",
+  "permissions": [
+    "storage",
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback",
+    "notifications",
+    "alarms"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Open ZenFlow Dashboard"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "icons": {
+    "128": "https://cdn-icons-png.flaticon.com/512/2092/2092044.png"
+  }
+}
