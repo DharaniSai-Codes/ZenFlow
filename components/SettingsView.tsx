@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, Globe, ShieldCheck, Bell, Smartphone, Timer, Search, ShieldAlert, Info } from 'lucide-react';
+import { Plus, Trash2, Globe, ShieldCheck, Bell, Smartphone, Timer, Search, ShieldAlert, Info, Activity, CheckCircle2, XCircle } from 'lucide-react';
 
 declare const chrome: any;
 
@@ -27,10 +27,20 @@ const SettingsView: React.FC = () => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [adBlockEnabled, setAdBlockEnabled] = useState(false);
+  const [systemStatus, setSystemStatus] = useState({
+    chromeApi: false,
+    storage: false,
+    aiReady: !!process.env.API_KEY && process.env.API_KEY !== 'undefined'
+  });
   const suggestionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (typeof chrome !== 'undefined' && chrome.storage) {
+    // Perform Health Check
+    const hasChrome = typeof chrome !== 'undefined';
+    const hasStorage = hasChrome && !!chrome.storage;
+    setSystemStatus(prev => ({ ...prev, chromeApi: hasChrome, storage: hasStorage }));
+
+    if (hasStorage) {
       chrome.storage.local.get(['blockedSites', 'adBlockEnabled'], (result: any) => {
         if (result.blockedSites) setSites(result.blockedSites);
         if (result.adBlockEnabled !== undefined) setAdBlockEnabled(result.adBlockEnabled);
@@ -93,8 +103,8 @@ const SettingsView: React.FC = () => {
           <p className="text-slate-400">Configure how strictly ZenFlow handles distractions.</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-          <Info size={16} className="text-indigo-400" />
-          <span className="text-xs text-indigo-200">AI-Powered behavioral blocking is active.</span>
+          <Activity size={16} className="text-indigo-400" />
+          <span className="text-xs font-bold text-indigo-200">System Live</span>
         </div>
       </header>
 
@@ -177,18 +187,27 @@ const SettingsView: React.FC = () => {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="font-bold text-white">Universal Ad Blocking</p>
-                  <p className="text-xs text-slate-400 max-w-xs">Blocks 10,000+ common tracking and ad domains to speed up browsing.</p>
+                  <p className="text-xs text-slate-400 max-w-xs">Blocks 10,000+ common tracking and ad domains.</p>
                 </div>
                 <Toggle checked={adBlockEnabled} onChange={toggleAdBlock} />
-              </div>
-              <div className="text-[10px] text-slate-500 italic p-3 bg-slate-950 rounded-xl">
-                Unlike AdGuard, this protocol is optimized for performance during Deep Work sessions.
               </div>
             </div>
           </div>
         </div>
 
         <div className="space-y-6">
+           <div className="glass rounded-3xl p-6">
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <ShieldCheck className="text-emerald-400" size={20} />
+                System Health
+              </h3>
+              <div className="space-y-3">
+                <HealthItem label="Chrome API" active={systemStatus.chromeApi} />
+                <HealthItem label="Storage Engine" active={systemStatus.storage} />
+                <HealthItem label="AI Engine" active={systemStatus.aiReady} />
+              </div>
+           </div>
+
            <div className="glass rounded-3xl p-6 space-y-6">
               <h3 className="text-lg font-bold mb-2">Notification Center</h3>
               <ToggleRow icon={<Bell size={18} />} label="System Alerts" checked={true} />
@@ -196,10 +215,9 @@ const SettingsView: React.FC = () => {
            </div>
 
            <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl p-6 text-white text-center shadow-xl shadow-indigo-600/20 border border-white/10">
-              <ShieldCheck size={40} className="mx-auto mb-4 opacity-50" />
               <h4 className="font-bold mb-2">Privacy Shield</h4>
               <p className="text-xs text-indigo-100 leading-relaxed">
-                ZenFlow works 100% locally. No history or personal data ever leaves your browser.
+                ZenFlow works 100% locally.
               </p>
            </div>
         </div>
@@ -207,6 +225,13 @@ const SettingsView: React.FC = () => {
     </div>
   );
 };
+
+const HealthItem = ({ label, active }: { label: string, active: boolean }) => (
+  <div className="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
+    <span className="text-xs text-slate-400 font-medium">{label}</span>
+    {active ? <CheckCircle2 size={14} className="text-emerald-500" /> : <XCircle size={14} className="text-rose-500" />}
+  </div>
+);
 
 const Toggle = ({ checked, onChange }: { checked: boolean, onChange: () => void }) => (
   <button 
